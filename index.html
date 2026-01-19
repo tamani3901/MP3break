@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>MP3 Breaker</title>
+<style>
+body {
+  background:#111;
+  color:#eee;
+  font-family:monospace;
+  text-align:center;
+  padding:30px;
+}
+button {
+  padding:10px 20px;
+  font-size:16px;
+  cursor:pointer;
+}
+input {
+  margin:20px 0;
+}
+</style>
+</head>
+<body>
+
+<h1>MP3 破壊ツール</h1>
+
+<input type="file" id="file" accept=".mp3"><br>
+<label>破壊率: <span id="rateVal">5</span>%</label><br>
+<input type="range" id="rate" min="1" max="50" value="5"><br><br>
+
+<button onclick="breakMp3()">破壊して吐く</button>
+
+<script>
+const rateSlider = document.getElementById("rate");
+const rateVal = document.getElementById("rateVal");
+rateSlider.oninput = () => rateVal.textContent = rateSlider.value;
+
+function breakMp3() {
+  const fileInput = document.getElementById("file");
+  if (!fileInput.files.length) return alert("mp3選んで");
+
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    const buffer = reader.result;
+    const bytes = new Uint8Array(buffer);
+
+    const headerSize = 4096; // ここは壊さない
+    const breakRate = rateSlider.value / 100;
+
+    for (let i = headerSize; i < bytes.length; i++) {
+      if (Math.random() < breakRate) {
+        // ランダムにバイト破壊
+        bytes[i] = Math.floor(Math.random() * 256);
+      }
+    }
+
+    const blob = new Blob([bytes], { type: "audio/mpeg" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "broken_" + file.name;
+    a.click();
+
+    URL.revokeObjectURL(url);
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+</script>
+
+</body>
+</html>
